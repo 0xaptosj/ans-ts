@@ -1,7 +1,4 @@
 import "dotenv/config";
-import { createClient } from "@thalalabs/surf";
-import { Provider, type Network, AptosAccount } from "aptos";
-import { ABI } from "./abi";
 import { ANS } from "./ans";
 
 if (!process.env.NETWORK) throw new Error("NETWORK not set");
@@ -9,16 +6,9 @@ else if (process.env.NETWORK !== "testnet" && process.env.NETWORK !== "mainnet")
   throw new Error("NETWORK must be testnet or mainnet");
 else if (!process.env.PRIVATE_KEY) throw new Error("PRIVATE_KEY not set");
 
-const provider = new Provider(process.env.NETWORK as Network);
-const client = createClient({
-  nodeUrl: provider.aptosClient.nodeUrl,
-}).useABI(ABI);
-const account = AptosAccount.fromAptosAccountObject({
-  privateKeyHex: process.env.PRIVATE_KEY,
-});
-const accountAddr = account.address().hex() as `0x${string}`;
 const SECONDS_PER_YEAR = 60 * 60 * 24 * 365;
 const ans = new ANS(process.env.NETWORK, process.env.PRIVATE_KEY);
+const routerAns = new ANS(process.env.NETWORK, process.env.ROUTER_PRIVATE_KEY);
 
 // Configurables
 const DOMAIN = "testdomain";
@@ -26,10 +16,7 @@ const SUBDOMAIN = "test";
 
 const main = async () => {
   {
-    const mode = await client.view.get_mode({
-      arguments: [],
-      type_arguments: [],
-    });
+    const mode = await ans.getRouterMode();
     console.log(`Router mode: ${mode}`);
   }
 
@@ -122,6 +109,24 @@ const main = async () => {
     }
   }
   await printTargetAddrs();
+
+  // Toggle mode
+  //   {
+  //     try {
+  //       const res = await routerAns.setRouterMode(0);
+  //       console.log(`Set router mode to v1 success: ${res.hash}`);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   }
+  //   {
+  //     try {
+  //       const res = await routerAns.setRouterMode(1);
+  //       console.log(`Set router mode to v2 success: ${res.hash}`);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   }
 
   {
     try {
