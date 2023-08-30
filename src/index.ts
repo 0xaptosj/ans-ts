@@ -11,7 +11,7 @@ const SECONDS_PER_YEAR = 60 * 60 * 24 * 365;
 const ans = new ANS(process.env.NETWORK, process.env.PRIVATE_KEY);
 const routerAns = new ANS(process.env.NETWORK, process.env.ROUTER_PRIVATE_KEY);
 const account = AptosAccount.fromAptosAccountObject({
-  privateKeyHex: process.env.NETWORK,
+  privateKeyHex: process.env.PRIVATE_KEY,
 });
 const accountAddr = account.address().hex() as `0x${string}`;
 
