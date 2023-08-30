@@ -166,6 +166,14 @@ export class ANS {
 
   // ADMIN
 
+  async getRouterMode() {
+    const mode = await this.client.useABI(ABI).view.get_mode({
+      arguments: [],
+      type_arguments: [],
+    });
+    return Number(mode);
+  }
+
   async setRouterMode(mode: number) {
     if (!this.account) throw new Error("ANS SDK: No account provided");
     return this.client.useABI(ABI).entry.set_mode({
