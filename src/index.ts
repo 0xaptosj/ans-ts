@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { ANS } from "./ans";
+import { AptosAccount } from "aptos";
 
 if (!process.env.NETWORK) throw new Error("NETWORK not set");
 else if (process.env.NETWORK !== "testnet" && process.env.NETWORK !== "mainnet")
@@ -9,6 +10,10 @@ else if (!process.env.PRIVATE_KEY) throw new Error("PRIVATE_KEY not set");
 const SECONDS_PER_YEAR = 60 * 60 * 24 * 365;
 const ans = new ANS(process.env.NETWORK, process.env.PRIVATE_KEY);
 const routerAns = new ANS(process.env.NETWORK, process.env.ROUTER_PRIVATE_KEY);
+const account = AptosAccount.fromAptosAccountObject({
+  privateKeyHex: process.env.NETWORK,
+});
+const accountAddr = account.address().hex() as `0x${string}`;
 
 // Configurables
 const DOMAIN = "testdomain";
