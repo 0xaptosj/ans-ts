@@ -1,9 +1,8 @@
 import "dotenv/config";
-import { createClient, createEntryPayload } from "@thalalabs/surf";
+import { createClient } from "@thalalabs/surf";
 import { Provider, type Network, AptosAccount } from "aptos";
 import { ABI } from "./abi";
-
-type Option<T> = [{ vec: [T] | [] }];
+import { ANS } from "./ans";
 
 if (!process.env.NETWORK) throw new Error("NETWORK not set");
 else if (process.env.NETWORK !== "testnet" && process.env.NETWORK !== "mainnet")
@@ -17,8 +16,9 @@ const client = createClient({
 const account = AptosAccount.fromAptosAccountObject({
   privateKeyHex: process.env.PRIVATE_KEY,
 });
-const accountAddr = account.address();
+const accountAddr = account.address().hex() as `0x${string}`;
 const SECONDS_PER_YEAR = 60 * 60 * 24 * 365;
+const ans = new ANS(process.env.NETWORK, process.env.PRIVATE_KEY);
 
 // Configurables
 const DOMAIN = "testdomain";
@@ -33,50 +33,145 @@ const main = async () => {
     console.log(`Router mode: ${mode}`);
   }
 
-  // Register domain
   {
     try {
-      const res = await client.entry.register_domain({
-        type_arguments: [],
-        arguments: [DOMAIN, SECONDS_PER_YEAR, [], []],
-        account,
-      });
-      console.log(`Domain registration success: ${res.hash}`);
+      const res = await ans.registerDomain(DOMAIN, SECONDS_PER_YEAR);
+      console.log(`${DOMAIN} registration success: ${res.hash}`);
     } catch (e) {
       console.error(e);
     }
   }
 
-  // Register subdomain
   {
     const IN_HALF_YEAR = Math.floor(Date.now() / 1000) + SECONDS_PER_YEAR / 2;
     try {
-      const res = await client.entry.register_subdomain({
-        type_arguments: [],
-        arguments: [DOMAIN, SUBDOMAIN, IN_HALF_YEAR, 0, false, [], []],
-        account,
-      });
-      console.log(`Subdomain registration success: ${res.hash}`);
+      const res = await ans.registerSubdomain(
+        DOMAIN,
+        SUBDOMAIN,
+        IN_HALF_YEAR,
+        0,
+        false
+      );
+      console.log(`${SUBDOMAIN}.${DOMAIN} registration success: ${res.hash}`);
     } catch (e) {
       console.error(e);
     }
   }
 
   {
-    const targetAddr = (await client.view.get_target_addr({
-      arguments: [DOMAIN, { vec: [] } as any],
-      type_arguments: [],
-    })) as Option<string>;
-    console.log(`${DOMAIN}.apt target address: ${targetAddr[0].vec[0]}`);
+    try {
+      const res = await ans.setPrimaryName(DOMAIN, SUBDOMAIN);
+      console.log(
+        `Set primary name to ${SUBDOMAIN}.${DOMAIN}.apt success: ${res.hash}`
+      );
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   {
-    const targetAddr = (await client.view.get_target_addr({
-      arguments: [DOMAIN, { vec: [SUBDOMAIN] } as any],
-      type_arguments: [],
-    })) as Option<string>;
+    const targetAddr = "0x1";
+    try {
+      const res = await ans.setTargetAddr(DOMAIN, SUBDOMAIN, targetAddr);
+      console.log(
+        `Set target address for ${SUBDOMAIN}.${DOMAIN}.apt to ${targetAddr} success: ${res.hash}`
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  await printTargetAddrs();
+
+  {
+    const { primaryNameSubdomain, primaryNameDomain } =
+      await ans.getPrimaryName(accountAddr);
     console.log(
-      `${SUBDOMAIN}.${DOMAIN}.apt target address: ${targetAddr[0].vec[0]}`
+      `${accountAddr} primary name: ${[
+        ...(primaryNameSubdomain ? [primaryNameSubdomain] : []),
+        ...(primaryNameDomain ? [primaryNameDomain] : []),
+      ].join(".")}.apt`
+    );
+  }
+
+  {
+    try {
+      const res = await ans.clearPrimaryName();
+      console.log(`Clear primary name success: ${res.hash}`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  {
+    const { primaryNameSubdomain, primaryNameDomain } =
+      await ans.getPrimaryName(accountAddr);
+    console.log(
+      `${accountAddr} primary name: ${[
+        ...(primaryNameSubdomain ? [primaryNameSubdomain] : []),
+        ...(primaryNameDomain ? [primaryNameDomain] : []),
+      ].join(".")}.apt`
+    );
+  }
+
+  {
+    try {
+      const res = await ans.clearTargetAddr(DOMAIN, SUBDOMAIN);
+      console.log(`Clear target address success: ${res.hash}`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  await printTargetAddrs();
+
+  {
+    try {
+      const res = await ans.renewDomain(DOMAIN, SECONDS_PER_YEAR);
+      console.log(`Renew domain success: ${res.hash}`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  await printExpirations();
+
+  {
+    try {
+      const res = await ans.migrateName(DOMAIN);
+      console.log(`Migrate ${DOMAIN}.apt success: ${res.hash}`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  {
+    try {
+      const res = await ans.migrateName(DOMAIN, SUBDOMAIN);
+      console.log(`Migrate ${SUBDOMAIN}.${DOMAIN}.apt success: ${res.hash}`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+};
+
+const printTargetAddrs = async () => {
+  {
+    const targetAddr = await ans.getTargetAddr(DOMAIN);
+    console.log(`${DOMAIN}.apt target address: ${targetAddr}`);
+  }
+  {
+    const targetAddr = await ans.getTargetAddr(DOMAIN, SUBDOMAIN);
+    console.log(`${SUBDOMAIN}.${DOMAIN}.apt target address: ${targetAddr}`);
+  }
+};
+
+const printExpirations = async () => {
+  {
+    const expiration = await ans.getExpiration(DOMAIN);
+    console.log(`${DOMAIN}.apt expiration: ${new Date(expiration * 1000)}`);
+  }
+  {
+    const expiration = await ans.getExpiration(DOMAIN, SUBDOMAIN);
+    console.log(
+      `${SUBDOMAIN}.${DOMAIN}.apt expiration: ${new Date(expiration * 1000)}`
     );
   }
 };
