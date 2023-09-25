@@ -27,4 +27,11 @@ export class ANS {
     }
   }
 
+  async getPrimaryName() {
+    if (!this.account) throw new Error("ANS SDK: No account provided");
+    return this.client.useABI(ABI).view.get_reverse_lookup({
+      type_arguments: [],
+      arguments: [this.accountAddr!],
+    });
+  }
 }

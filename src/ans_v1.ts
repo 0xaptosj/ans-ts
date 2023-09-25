@@ -51,4 +51,20 @@ export class ANS {
     });
   }
 
+  async initReverseRegistry() {
+    if (!this.account) throw new Error("ANS SDK: No account provided");
+    return this.client.useABI(ABI).entry.init_reverse_lookup_registry_v1({
+      type_arguments: [],
+      arguments: [],
+      account: this.account,
+    });
+  }
+
+  async getPrimaryName() {
+    if (!this.account) throw new Error("ANS SDK: No account provided");
+    return this.client.useABI(ABI).view.get_reverse_lookup({
+      type_arguments: [],
+      arguments: [this.accountAddr!],
+    });
+  }
 }

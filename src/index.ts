@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { ANS as AnsRouter } from "./ans_router";
 import { ANS as AnsV1 } from "./ans_v1";
+import { ANS as AnsV2 } from "./ans_v2";
 // import { ANS as BulkMigrate } from "./bulk_migrate";
 
 import { AptosAccount } from "aptos";
@@ -13,6 +14,7 @@ else if (!process.env.PRIVATE_KEY) throw new Error("PRIVATE_KEY not set");
 const SECONDS_PER_YEAR = 60 * 60 * 24 * 365;
 
 const ansV1 = new AnsV1(process.env.NETWORK, process.env.PRIVATE_KEY);
+const ansV2 = new AnsV2(process.env.NETWORK, process.env.PRIVATE_KEY);
 const ansRouter = new AnsRouter(
   process.env.NETWORK,
   // process.env.ROUTER_PRIVATE_KEY
@@ -29,9 +31,9 @@ const account = AptosAccount.fromAptosAccountObject({
 const accountAddr = account.address().hex() as `0x${string}`;
 
 // Configurables
-const DOMAIN = "testdomain";
+const DOMAIN = "testdomain3";
 // const DOMAIN = "hellofoivfm";
-const SUBDOMAIN = "sub3";
+const SUBDOMAIN = "sub1";
 
 const printTargetAddrs = async () => {
   {
@@ -45,15 +47,31 @@ const printTargetAddrs = async () => {
 };
 
 const main = async () => {
-  // {
-  //   const mode = await ansRouter.setRouterMode(1);
-  //   console.log(`Router mode: ${mode}`);
-  // }
+  // await printTargetAddrs();
 
   {
     const mode = await ansRouter.getRouterMode();
+    console.log(`Router mode before: ${mode}`);
+  }
+
+  {
+    const mode = await ansRouter.setRouterMode(1);
     console.log(`Router mode: ${mode}`);
   }
+
+  {
+    const mode = await ansRouter.getRouterMode();
+    console.log(`Router mode after: ${mode}`);
+  }
+
+  // {
+  //   try {
+  //     const res = await ansV1.initReverseRegistry();
+  //     console.log(`${DOMAIN} registration success: ${res.hash}`);
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // }
 
   // {
   //   try {
@@ -64,21 +82,46 @@ const main = async () => {
   //   }
   // }
 
-  {
-    const IN_HALF_YEAR = Math.floor(Date.now() / 1000) + SECONDS_PER_YEAR / 2;
-    try {
-      const res = await ansRouter.registerSubdomain(
-        DOMAIN,
-        SUBDOMAIN,
-        IN_HALF_YEAR,
-        0,
-        false
-      );
-      console.log(`${SUBDOMAIN}.${DOMAIN} registration success: ${res.hash}`);
-    } catch (e) {
-      console.error(e);
-    }
-  }
+  // {
+  //   const { primaryNameSubdomain, primaryNameDomain } =
+  //     await ansRouter.getPrimaryName(accountAddr);
+  //   console.log(
+  //     `${accountAddr} router primary name: ${[
+  //       ...(primaryNameSubdomain ? [primaryNameSubdomain] : []),
+  //       ...(primaryNameDomain ? [primaryNameDomain] : []),
+  //     ].join(".")}.apt`
+  //   );
+  // }
+
+  // {
+  //   const result = await ansV1.getPrimaryName();
+  //   console.log(
+  //     `${accountAddr} v1 primary name: ${JSON.stringify(result)}.apt`
+  //   );
+  // }
+
+  // {
+  //   const result = await ansV2.getPrimaryName();
+  //   console.log(
+  //     `${accountAddr} v2 primary name: ${JSON.stringify(result)}.apt`
+  //   );
+  // }
+
+  // {
+  //   const IN_HALF_YEAR = Math.floor(Date.now() / 1000) + SECONDS_PER_YEAR / 2;
+  //   try {
+  //     const res = await ansRouter.registerSubdomain(
+  //       DOMAIN,
+  //       SUBDOMAIN,
+  //       IN_HALF_YEAR,
+  //       0,
+  //       false
+  //     );
+  //     console.log(`${SUBDOMAIN}.${DOMAIN} registration success: ${res.hash}`);
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // }
 
   // {
   //   try {
@@ -141,16 +184,16 @@ const main = async () => {
   // }
   // await printTargetAddrs();
 
-  //   {
-  //     const { primaryNameSubdomain, primaryNameDomain } =
-  //       await ans.getPrimaryName(accountAddr);
-  //     console.log(
-  //       `${accountAddr} primary name: ${[
-  //         ...(primaryNameSubdomain ? [primaryNameSubdomain] : []),
-  //         ...(primaryNameDomain ? [primaryNameDomain] : []),
-  //       ].join(".")}.apt`
-  //     );
-  //   }
+  // {
+  //   const { primaryNameSubdomain, primaryNameDomain } =
+  //     await ans.getPrimaryName(accountAddr);
+  //   console.log(
+  //     `${accountAddr} primary name: ${[
+  //       ...(primaryNameSubdomain ? [primaryNameSubdomain] : []),
+  //       ...(primaryNameDomain ? [primaryNameDomain] : []),
+  //     ].join(".")}.apt`
+  //   );
+  // }
 
   //   {
   //     try {
@@ -172,15 +215,14 @@ const main = async () => {
   //     );
   //   }
 
-  //   {
-  //     try {
-  //       const res = await ans.clearTargetAddr(DOMAIN, SUBDOMAIN);
-  //       console.log(`Clear target address success: ${res.hash}`);
-  //     } catch (e) {
-  //       console.error(e);
-  //     }
+  // {
+  //   try {
+  //     const res = await ans.clearTargetAddr(DOMAIN, SUBDOMAIN);
+  //     console.log(`Clear target address success: ${res.hash}`);
+  //   } catch (e) {
+  //     console.error(e);
   //   }
-  //   await printTargetAddrs();
+  // }
 
   //   // Toggle mode
   //   //   {
